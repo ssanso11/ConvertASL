@@ -2,3 +2,5 @@ pretrained-model/*
 pretrained-model
 casl-create-dataset/*
 casl-create-dataset
+.DS_Store
+.vscode/*

@@ -2,21 +2,50 @@
 import React, { useRef, useState, useEffect } from "react";
 import * as tf from "@tensorflow/tfjs";
 import Webcam from "react-webcam";
-import { nextFrame } from "@tensorflow/tfjs";
 // 2. TODO - Import drawing utility here
 // e.g. import { drawRect } from "./utilities";
-import {drawRect} from "./utilities"; 
+import {arrMaskMap, arrRgbMap, arrMaskMapRGBA} from "./helpers/rgb_to_hsv.js"
+import ReactSlider from "react-slider"
+// import { useState } from "react-usestateref";
 
 function App() {
   const webcamRef = useRef(null);
   const canvasRef = useRef(null);
+
+  var [currLetter, setCurrLetter] = useState();
+  const [s_h, setSaturationH] = useState(100);
+  const [v_h, setValueH] = useState(100);
+  const [h_h, setHueH] = useState(360);
+  const [s_l, setSaturationL] = useState(0);
+  const [v_l, setValueL] = useState(0);
+  const [h_l, setHueL] = useState(0);
+  // var [currLetter, setCurrLetter, currLetterRef] = useState('a');
+  // const [s_h, setSaturationH, s_h_ref] = useState(100);
+  // const [v_h, setValueH, v_h_ref] = useState(100);
+  // const [h_h, setHueH, h_h_ref] = useState(360);
+  // const [s_l, setSaturationL, s_l_ref] = useState(0);
+  // const [v_l, setValueL, v_l_ref] = useState(0);
+  // const [h_l, setHueL, h_l_ref] = useState(0);
+
+  const shRef = useRef();
+  const slRef = useRef();
+  const vhRef = useRef();
+  const vlRef = useRef();
+  const hhRef = useRef();
+  const hlRef = useRef();
+
+  shRef.current = s_h
+  slRef.current = s_l
+  vhRef.current = v_h
+  vlRef.current = v_l
+  hhRef.current = h_h
+  hlRef.current = h_l
 
   const check_num = (result) => {
     const alph = "abcdefghijklmnopqrstuvwxyz"
     for (var i = 0; i < result.length; i++) {
       //console.log(result.length);
       if (result[i] > 0) {
-        console.log(i);
         return alph.charAt(i);
       }
     }
@@ -31,7 +60,7 @@ function App() {
     //  Loop and detect hands
     setInterval(() => {
       detect(net);
-    }, 1600.7);
+    }, 16.7);
   };
 
   const detect = async (net) => {
@@ -50,19 +79,63 @@ function App() {
       webcamRef.current.video.width = videoWidth;
       webcamRef.current.video.height = videoHeight;
 
-      // Set canvas height and width
-      canvasRef.current.width = videoWidth;
-      canvasRef.current.height = videoHeight;
+      // Hue/saturation/value cutoffs for images
+
+
+      const ctx = canvasRef.current.getContext("2d");
 
       // 4. TODO - Make Detections
       const img = tf.browser.fromPixels(video)
-      const resized = tf.image.resizeBilinear(img, [64,64])
-      const expanded = resized.expandDims(0)
+      const resized = tf.image.resizeBilinear(img, [128,128])
+      const resized_arr = await resized.array()
+      // const new_resized = resized.dataSync()
+      // console.log(shRef.current);
+      // console.log(resized_arr)
+      const hsv_img = resized_arr.map(arrRgbMap)
+      // const bw_hsv_img = hsv_img.map(x => arrMaskMap(x, h_l_ref.current, h_h_ref.current, s_l_ref.current, s_h_ref.current, v_l_ref.current, v_h_ref.current))
+      const bw_hsv_img = hsv_img.map(x => arrMaskMap(x, hlRef.current, hhRef.current, slRef.current, shRef.current, vlRef.current, vhRef.current))
+      const bw_hsv_img_rgba = hsv_img.map(x => arrMaskMapRGBA(x, hlRef.current, hhRef.current, slRef.current, shRef.current, vlRef.current, vhRef.current))
+      //console.log(bw_hsv_img_rgba_flat)
+    
+      
+      // cropping image
+      const bw_hsv_img_cols_cropped = bw_hsv_img.slice(0, 64)
+      const bw_hsv_img_full_cropped = [];
+      
+      for (var i = 0; i < bw_hsv_img_cols_cropped.length; i++) {
+        bw_hsv_img_full_cropped.push(bw_hsv_img_cols_cropped[i].slice(0, 64))
+      }
+
+      // cropping displayed image
+      const bw_hsv_img_rgba_cols_cropped = bw_hsv_img_rgba.slice(0, 64)
+      const bw_hsv_img_rgba_full_cropped = [];
+      
+      for (var i = 0; i < bw_hsv_img_rgba_cols_cropped.length; i++) {
+        bw_hsv_img_rgba_full_cropped.push(bw_hsv_img_rgba_cols_cropped[i].slice(0, 64))
+      }
+
+      // write image data
+      const testerttt = Uint8ClampedArray.from(bw_hsv_img_rgba_full_cropped.flat(3))
+      // let bw_hsv_img_rgba_flat_conv = new ImageData(testerttt, 64, 64);
+      // ctx.putImageData(bw_hsv_img_rgba_flat_conv, 0, 0);
+        // Initialize a new ImageData object
+      let imageData = new ImageData(testerttt, 64);
+
+      // Draw image data to the canvas
+      ctx.putImageData(imageData, 0, 0);
+
+      // ctx
+      const tensor_img = tf.tensor(bw_hsv_img_full_cropped)
+
+      const expanded = tensor_img.expandDims(0)
       const obj = net.predict(expanded)
 
       var new_arr = await obj.array()
-      const asdfasd = check_num(new_arr[0])
-      console.log(asdfasd)
+      const letter = check_num(new_arr[0])
+      setCurrLetter(letter)
+
+
+
       // const boxes = await obj[1].array()
       // const classes = await obj[2].array()
       // console.log(classes);
@@ -92,33 +165,99 @@ function App() {
           ref={webcamRef}
           muted={true} 
           style={{
-            position: "absolute",
-            marginLeft: "auto",
-            marginRight: "auto",
-            marginTop: "50px",
-            left: 0,
-            right: 0,
+            display:"block",
             textAlign: "center",
-            zindex: 9,
             width: "90%",
-            height: 600,
+            height:"600px",
+            marginLeft:"auto",
+            marginRight:"auto",
+            marginTop: "50px",
+            zIndex:9
           }}
         />
-
         <canvas
           ref={canvasRef}
           style={{
-            position: "absolute",
+            display: "block",
             marginLeft: "auto",
             marginRight: "auto",
-            left: 0,
-            right: 0,
-            textAlign: "center",
-            zindex: 8,
-            width: 640,
-            height: 480,
+            width: 256*4,
+            height: 256,
+            zIndex: 10
           }}
         />
+        <p style={{
+          paddingLeft:"50%",
+          fontSize: "40px"
+        }}>
+          {currLetter}
+        </p>
+        <h1>SH</h1>
+        <ReactSlider
+          ariaLabel="Hellow words"
+          className="horizontal-slider"
+          thumbClassName="example-thumb"
+          trackClassName="example-track"
+          value={s_h}
+          onAfterChange={(value, index) => setSaturationH(value)}
+          renderThumb={(props, state) => <div {...props}>{state.valueNow}</div>}
+        />
+        <hr/>
+        <h1>SL</h1>
+        <ReactSlider
+          ariaLabel="Hellow words"
+          className="horizontal-slider"
+          thumbClassName="example-thumb"
+          trackClassName="example-track"
+          value={s_l}
+          onAfterChange={(value, index) => setSaturationL(value)}
+          renderThumb={(props, state) => <div {...props}>{state.valueNow}</div>}
+        />
+        <hr/>
+        <h1>VH</h1>
+        <ReactSlider
+          ariaLabel="Hellow words"
+          className="horizontal-slider"
+          thumbClassName="example-thumb"
+          trackClassName="example-track"
+          value={v_h}
+          onAfterChange={(value, index) => setValueH(value)}
+          renderThumb={(props, state) => <div {...props}>{state.valueNow}</div>}
+        />
+        <hr/>
+        <h1>VL</h1>
+        <ReactSlider
+          ariaLabel="Hellow words"
+          className="horizontal-slider"
+          thumbClassName="example-thumb"
+          trackClassName="example-track"
+          value={v_l}
+          onAfterChange={(value, index) => setValueL(value)}
+          renderThumb={(props, state) => <div {...props}>{state.valueNow}</div>}
+        />
+        <hr/>
+        <h1>HH</h1>
+        <ReactSlider
+          ariaLabel="Hellow words"
+          className="horizontal-slider"
+          thumbClassName="example-thumb"
+          trackClassName="example-track"
+          value={h_h}
+          onAfterChange={(value, index) => setHueH(value)}
+          renderThumb={(props, state) => <div {...props}>{state.valueNow}</div>}
+        />
+        <hr/>
+        <h1>HL</h1>
+        <ReactSlider
+          ariaLabel="Hellow words"
+          className="horizontal-slider"
+          thumbClassName="example-thumb"
+          trackClassName="example-track"
+          value={h_l}
+          onAfterChange={(value, index) => setHueL(value)}
+          renderThumb={(props, state) => <div {...props}>{state.valueNow}</div>}
+        />
+        
       </header>
     </div>
   );

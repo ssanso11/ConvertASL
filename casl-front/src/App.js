@@ -159,8 +159,9 @@ function App() {
   useEffect(()=>{runCoco()},[]);
 
   return (
-    <div className="App">
-      <header className="App-header">
+    <div className="App" textAlign="center">
+      <header className="App-header" >
+        <h1 style={{paddingLeft:"43%"}}>ConvertASL</h1>
         <Webcam
           ref={webcamRef}
           muted={true} 
@@ -183,7 +184,8 @@ function App() {
             marginRight: "auto",
             width: 256*4,
             height: 256,
-            zIndex: 10
+            zIndex: 10,
+            marginBottom: "-200px"
           }}
         />
         <p style={{
@@ -192,7 +194,7 @@ function App() {
         }}>
           {currLetter}
         </p>
-        <h1>SH</h1>
+        <h1>Saturation High</h1>
         <ReactSlider
           ariaLabel="Hellow words"
           className="horizontal-slider"
@@ -203,7 +205,7 @@ function App() {
           renderThumb={(props, state) => <div {...props}>{state.valueNow}</div>}
         />
         <hr/>
-        <h1>SL</h1>
+        <h1>Saturation Low</h1>
         <ReactSlider
           ariaLabel="Hellow words"
           className="horizontal-slider"
@@ -214,7 +216,7 @@ function App() {
           renderThumb={(props, state) => <div {...props}>{state.valueNow}</div>}
         />
         <hr/>
-        <h1>VH</h1>
+        <h1>Value High</h1>
         <ReactSlider
           ariaLabel="Hellow words"
           className="horizontal-slider"
@@ -225,7 +227,7 @@ function App() {
           renderThumb={(props, state) => <div {...props}>{state.valueNow}</div>}
         />
         <hr/>
-        <h1>VL</h1>
+        <h1>Value Low</h1>
         <ReactSlider
           ariaLabel="Hellow words"
           className="horizontal-slider"
@@ -236,7 +238,7 @@ function App() {
           renderThumb={(props, state) => <div {...props}>{state.valueNow}</div>}
         />
         <hr/>
-        <h1>HH</h1>
+        <h1>Hue High</h1>
         <ReactSlider
           ariaLabel="Hellow words"
           className="horizontal-slider"
@@ -247,7 +249,7 @@ function App() {
           renderThumb={(props, state) => <div {...props}>{state.valueNow}</div>}
         />
         <hr/>
-        <h1>HL</h1>
+        <h1>Hue Low</h1>
         <ReactSlider
           ariaLabel="Hellow words"
           className="horizontal-slider"

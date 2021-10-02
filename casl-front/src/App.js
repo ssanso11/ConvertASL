@@ -2,7 +2,7 @@
 import React, { useRef, useState, useEffect } from "react";
 import * as tf from "@tensorflow/tfjs";
 import Webcam from "react-webcam";
-// 2. TODO - Import drawing utility here
+// 2. Import drawing utility here
 // e.g. import { drawRect } from "./utilities";
 import {arrMaskMap, arrRgbMap, arrMaskMapRGBA} from "./helpers/rgb_to_hsv.js"
 import ReactSlider from "react-slider"
@@ -190,7 +190,7 @@ function App() {
         />
         <p style={{
           paddingLeft:"50%",
-          fontSize: "40px"
+          fontSize: "180px"
         }}>
           {currLetter}
         </p>
